@@ -1,0 +1,169 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%               Präambel                   %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%Textformatierung
+\input{./praeamble/praeamble}
+
+%Bibliographie
+\usepackage[style=numeric,backend=bibtex,sorting=none]{biblatex}
+\bibliography{./bib/literatur}
+
+%Code
+\input{./code/code}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\onehalfspacing
+
+\begin{document}
+
+%\renewcommand\familydefault{\sfdefault} % verändert die Schriftart
+\sloppy  %sorgt für weniger Worttrennungen und dafür etwas größere Wortabstände
+\lefthyphenmin=4  % Silbentrennung --> mind. 4 Zeichen vor und nach Silbentrennung
+\righthyphenmin=4
+\lstset{basicstyle=\footnotesize\ttfamily,breaklines=true}
+\lstset{framextopmargin=50pt,frame=bottomline}
+
+%Absätze
+\setlength{\parindent}{0pt} %Einrückung der ersten Absatzzeile
+\setlength{\parskip}\medskipamount %Abstand zwischen Absätzen
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%           Titelblatt
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\counterwithin{lstlisting}{section}
+\input{./title/title}\label{pages}
+\pagenumbering{roman}
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%           Abstract
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\addcontentsline{toc}{section}{\abstractname} %Zum Inhaltsverzeichnis hinzufügen
+\input{./abstract/abstract}
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%           Inhaltsverzeichnis
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \begingroup\singlespacing
+\microtypesetup{protrusion=false} % disables protrusion locally in the document
+\tableofcontents
+\microtypesetup{protrusion=true} % enables protrusion
+\newpage
+
+%Abkürzungsverzeichnis
+\input{./acro/acro}
+\newpage
+% \endgroup
+
+\pagenumbering{arabic}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Kopfzeile mit Seitennummerierung
+%\usepackage[headsepline,nouppercase]{scrlayer-scrpage}
+\pagestyle{scrheadings}
+\clearscrheadfoot
+\ohead{\rightmark}
+\cfoot[\pagemark]{\pagemark}
+\automark{section}
+\setlength{\headsep}{0.5cm}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%           Hauptteil
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \singlespacing
+\input{./einleitung/einleitung}
+\input{./hauptteil/hauptteil}
+\input{./schluss/schluss}
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%           Verzeichnisse
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\pagenumbering{roman}
+\setcounter{page}{3}
+%Verzeichnisse und Anhänge
+%\pagestyle{plain}
+\cleardoublepage
+%\setlength{\parskip}{\parskip}
+\addcontentsline{toc}{section}{\bibname}
+% \begingroup\singlespacing
+\printbibliography
+% \endgroup
+\vspace{0.5cm}
+\begin{flushleft}
+Soweit nicht anderweitig angegeben, wurden alle Onlinequellen das letzte mal am \emph{08. Juni 2020} aufgerufen.
+\end{flushleft}
+
+\newpage
+
+\renewcommand{\listfigurename}{Abbildungen}
+% \addcontentsline{toc}{section}{\listfigurename}
+\cleardoublepage
+% \begingroup\singlespacing
+\listoffigures
+\newpage
+
+% \addcontentsline{toc}{section}{\lstlistlistingname}
+\cleardoublepage
+\lstlistoflistings
+\newpage
+
+\renewcommand{\listtablename}{Tabellen}
+% \addcontentsline{toc}{section}{\listtablename}
+\cleardoublepage
+\listoftables
+% \endgroup
+\newpage
+
+\addtocontents{toc}{\protect\setcounter{tocdepth}{0}}
+\cleardoublepage
+\input{./appendix/appendix}
+\addtocontents{toc}{\protect\setcounter{tocdepth}{2}}
+\newpage
+\cleardoublepage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%       Selbstständigkeitserklärung
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\pagestyle{plain}
+\pagestyle{empty}
+\input{./SSE/selbst}
+
+\end{document}

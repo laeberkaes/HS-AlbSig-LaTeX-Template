@@ -1,0 +1,264 @@
+% !TeX spellcheck = de_DE
+%!TEX root=../HA.tex
+\section{Vor und während der Installation}\label{sec:physical}
+Da es bei Arch Linux keinen grafischen Installer gibt, der einen durch den Installationsprozess führt, gestalltet sich die Definition von Standardinstallation hier ein wenig schwieriger. Deshalb wird nur kurz darauf eingegangen, was es während des Prozesses oder sogar noch davor in puncto Sicherheit zu beachten gibt. Auf den genauen Installationsablauf wird hier trotzdem nicht genauer eingegangen sondern auf das Arch-Wiki verwiesen.\cite{InstallationGuideArchWiki} Zwei Punkte bei welchen man von der Standardinstallation abweichen sollte wären zum einen eine vollständige Verschlüsselung mit separaten \ac{LUKS}-Headern und eine separate boot-Partition.
+
+\subsection{BIOS Absicherung}Auch wenn physischer Zugang zu einem Gerät äquivalent zum Zugriff auf den \texttt{root}-Nutzer ist, wenn er lang genug dauert, kann man durch das Absichern einiger Punkte eine praktikable Sicherheit erlangen.\cite{SecurityArchWiki} Deshalb sollte schon vor der Installation an die Sicherheit des Systems gedacht werden. Ein Punkt ist hier das \ac{BIOS}.
+
+Mit dem Setzen eines \ac{BIOS} Passworts können zwei kritische Punkte geschlossen werden.\cite[S. 15]{RedHatEnterprise2020a}
+
+\begin{enumerate}
+	\item Es wird verhindert, dass Veränderungen an den \ac{BIOS} Einstellungen vorgenommen werden. Dadurch könnte ein Angreifer die Bootreihenfolge so abändern, dass er von einer CD/DVD oder einem USB Stick ein anderes Betriebssystem booten kann und dadurch dann {\small(bei einem unverschlüsselten System)} vollständigen Zugriff auf das gesamte Dateisystem des installierten Systems. Dadurch kann er beim nächsten Bootvorgang des autorisierten Nutzers einen Prozess starten lassen oder an sensible Daten gelangen.
+	\item Man kann selbst den Start des Bootloaders innerhalb des \ac{BIOS} durch ein Passwort schützen. So kann ein Angreifer bei einem falsch konfigurierten Bootloader gar nicht erst in den Rescue Modus booten, aus welchem eine \texttt{root}-Shell ohne Passwort geöffnet werden kann.\cite{HowBootRoot2011} Den selben Effekt würde man auch erreichen, indem man das Passwort im Bootloader selbst setzt. Im Rückgriff auf \autoref{sec:enc} kann das für den \texttt{systemd-boot} Bootloader erreicht werden, indem das Packet \texttt{systemd-boot-password} aus dem \ac{AUR} installiert wird und das Passwort danach mit den Befehlen \texttt{sbpctl generate} \footnote{hiermit wird aus einem erfragten Passwort ein SHA-512 Hash ermittelt und zurückgegeben, der in die Konfigurationsdatei eingefügt werden kann} und \texttt{sbpctl install /boot/} \footnote{hiermit wird das Passwort in die EFI Partition installiert} gesetzt. Es sollte erwähnt werden, dass dadurch nicht generell ein Passwort vom Bootloader gefordert wird, sondern nur, falls man während des Bootvorgangs in den Editormodus wechsel und Kernelparameter verändern möchte.
+\end{enumerate}
+
+Das setzen eines \ac{BIOS} Passworts ist von herstellerabhängig. In den meisten Fällen kann aber mit \texttt{F2} oder \texttt{Delete} zu Beginn des Bootvorgangs in das \ac{BIOS} Menü gewechselt werden, in dem dann unter dem Sicherheitstab das Passwort gesetzt werden kann. Beispielhafte Bildschirmaufnahmen sind in \autoref{fig:bios} beigefügt. Dort ist auch zu sehen, dass zwischen Administrator- und Nutzerzugriff unterschieden werden kann.
+
+Zu Erwähnen bleibt noch, dass ein \ac{BIOS} Passwort nicht unbedingt die höchste Sicherheit bietet. Ein Angreifer könnte es einfach zurücksetzen, indem er den \ac{BIOS} Jumper um eine Position versetzt und die Position nach ein paar Sekunden wieder zurücksetzt. Eine andere Möglichkeit ist auch das kurzzeitige Herausnehmen der \acs{CMOS} Batterie.\cite{UltimateGuideRemoving2015} Sowohl der Jumper als auch die Batterie sind in \autoref{fig:jumper} zu sehen.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=.75\linewidth]{abbildungen/jumper}
+	\caption{Jumper und Batterie, um das \ac{BIOS} Passwort zurückzusetzen\cite{HowResetPC2015}}
+	\label{fig:jumper}
+\end{figure}
+
+\subsection{Verschlüsselung}\label{sec:enc}
+Warum sollte ein System überhaupt verschlüsselt werden? -- Diese Frage stellen sich viele Nutzer gar nicht erst. Es sollte ja reichen, wenn man ein sicheres Passwort gewählt hat, um sich in seinen Account einzuloggen. Angreifer, die mit einem USB Stick ein anderes Betriebssystem auf dem Gerät booten, haben jedoch trotzdem vollen Zugriff auf die dort gespeicherten Daten, falls diese nicht mithilfe einer \emph{data-at-rest encryption} verschlüsselt wurden.\cite{FullDiskEncryptionFDE} Deshalb hält es das \ac{BSI} für sinnvoll die Daten auf einem System zu verschlüsseln, um sie vor Personen zu schützen, die sich unberechtigt Zugriff zu dem Gerät verschaffen.\cite{Datenverschlusselung} Dies kann beispielsweise der Fall sein, wenn das Gerät gestohlen wird oder man es in der Öffentlichkeit unbeaufsichtigt lässt.\cite{DataatrestEncryptionArchWiki} Angriffe vor denen die Verschlüsselung nicht schützt sind hauptsächlich der Zugriff auf das System in laufendem Zustand {\small(beispielsweise über das Internet)} oder so genannte Cold-Boot-Angriffe.\footnote{Dabei wird der Arbeitsspeicher während des Betriebs so weit heruntergekühlt, dass er in ein anderes Gerät eingebaut werden kann und seine Daten dabei nicht verliert. So können beispielsweise Passwörter zu verschlüsselten Systemen ermittelt werden.}\cite[S. 45 f.]{ColdBootAttacks2008}
+
+Mit einer geeigneten Verschlüsselung sollte man sich schon vor der Installation beschäftigen. Bei den meisten Linuxdistributionen kann man eine vollständige Systemverschlüsselung einfach während des Installationsprozesses auswählen und diese wird dann ohne weiteres Zutun mit dem gewünschten Passwort eingerichtet. In Arch Linux  muss man sich etwas mehr damit beschäftigen als in anderen Distributionen. Schon direkt nach dem Starten der Liveumgebung kann mit der Partitionierung der Festplatten begonnen werden.\cite{DmcryptEncryptingEntire} Zum diesem Zeitpunkt sollte man sich darüber im klaren sein, wie weit man bei der Verschlüsselung gehen will. Es gibt die Möglichkeit alle Nutzerdaten zu verschlüsseln {\small(home-Partition)}, das gesamte Dateisystem {\small(root-Partition)} oder sogar zusätzlich noch die boot-Partition zu verschlüsseln. Alternativ zu einer verschlüsselten \texttt{boot}-Partition kann auch eine separate Partition beispielsweise auf einem USB-Stick verwendet werden, auf welchem dann auch der \ac{LUKS} Header gespeichert wird. Im Folgenden wird auf die alleinige Verschlüsselung der root-Partition eingegangen und danach noch beschrieben, wie man den Vorgang abändern kann, um die \ac{LUKS}-Header auf einen USB-Stick zu bekommen, auf dem sich dann auch die \texttt{boot}-Partition befindet. Am Ende sollte das Partitionslayout wie in \autoref{partitions} aussehen.
+
+\input{tikz/partition_layout}
+
+\paragraphs{Verschlüsselung der root-Partition}Bevor eine Festplatte oder Partition verschlüsselt wird {\small(am besten sogar noch vor der Partitionierung)}, sollte der gesamte Speicherplatz überschrieben werden. Laut \ac{NIST} genügt dazu mindestens ein Durchgang mit einer bestimmten Zeichenfolge {\small(bspw. 0en)}, um keine Daten mehr von der Festplatte wiederherstellen zu können.\cite[S. 7]{GuidelinesMediaSanitization2014} Somit sollte das Ausführen des Befehls \lstinline|shred -n0 -z /dev/sda2| genügen, um die Wiederherstellung der Dateien, die vor der Verschlüsselung auf der Festplatte oder Partition gespeichert waren, zu verhindern. Wer weitere Schreibvorgänge durchführen möchte, kann den Wert des Parameters \texttt{-n} beliebig erhöhen. Der Parameter \texttt{-z} sorgt dafür, dass ganz am Ende noch ein Durchgang mit 0en durchgeführt wird, damit das sichere Löschen der Daten noch zusätzlich verschleiert wird.\cite{ShredInvocationGNU}
+
+Auf den genauen Ablauf der Partitionierung wird hier nicht eingegangen, weil dies zum normalen Installationsprozess gehört. In dieser Arbeit wird von einer Partitionierung wie sie in \autoref{partitions} zu sehen ist ausgegangen. In diesem Fall wird die gesamte root-Partition mit \texttt{dm-crypt} verschlüsselt. Dazu muss zuerst das Tool \texttt{cryptsetup} installiert werden. Im Wiki von Arch Linux werden eine ganze Reihe an Möglichkeiten der Einrichtung einer Verschlüsselung erläutert.\cite{DmcryptEncryptingEntire} Im Weiteren wird darauf eingegangen mit \ac{LUKS} eine Partition ohne getrennten \ac{LUKS}-Header zu verschlüsseln.
+
+Um die \texttt{root}-Partition zu verschlüsseln werden die Befehle in \autoref{lst_enc} als root-Nutzer ausgeführt. In Zeile 1 wird die eigentliche Verschlüsselung durchgeführt. Dazu wird das installierte Tool \texttt{cryptsetup} verwendet. Die Parameter \texttt{-y} und \texttt{-v} sorgen dafür, dass nicht zusätzlich bestätigt werden muss {\small(\texttt{-y})} und mehr Informationen während des Vorgangs ausgegeben werden {\small(\texttt{-v})}. \texttt{luksFormat} gibt an, dass die der darauf folgenden Partition in eine \ac{LUKS}-Partition umgewandelt werden soll. In diesem Fall handelt es sich um die Partition \texttt{/dev/sda2} {\small(was die \texttt{root}-Partition werden soll)}. In Zeile 2 wird die Verschlüsselung der Partition geöffnet, damit man mit ihr wie mit einer unverschlüsselten Partition arbeiten kann. Dazu wird dem \texttt{cryptsetup} Befehl der Parameter \texttt{open} übergeben. Darauf folgt wieder die \texttt{root}-Partition und danach wird noch ein Name für die entschlüsselte Partition übergeben. Der Name wird dann im Verzeichnis \texttt{/dev/mapper/} verwendet, damit man auf die geöffnete Partition zugreifen kann. In der nächsten Zeile wird dann ein Dateisystem erstellt, was bei der \glqq normalen\grqq\ Partitionierung auch gemacht werden müsste. Als nächstes mountet man dann die \emph{geöffnete} Partition in dem Verzeichnis \texttt{/mnt/}.\cite{DmcryptEncryptingEntire}
+
+\begin{lstlisting}[caption=Verschlüsselungsvorgang, label=lst_enc]
+	cryptsetup -y -v luksFormat /dev/sda2
+	cryptsetup open /dev/sda1 cryptroot
+	mkfs.ext4 /dev/mapper/cryptroot
+	mount /dev/mapper/cryptroot /mnt
+\end{lstlisting}
+
+Nachdem die Partition jetzt verschlüsselt und gemountet ist, kann der normale Installationsprozess fortgesetzt werden. Dabei muss nur darauf geachtet werden, dass die geöffnete \texttt{root}-Partition jetzt über \texttt{/dev/mapper/cryptroot} und die verschlüsselte \texttt{root}-Partition über \texttt{/dev/sda2} zugreifbar ist.
+
+Damit während des Bootvorgangs auch das Passwort eingegeben werden kann und das korrekte Tastaturmapping verwendet wird, müssen in der \texttt{/etc/mkinitcpio.conf} Datei noch weitere Hooks angefügt werden. Dabei kommt es auf die Reihenfolge an, da die Hooks eben in dieser Reihenfolge geladen werden. Die Zeile mit den hooks sollte dann wie in \autoref{lst_mkinitcpio} aussehen. Wichtig dabei ist, dass \texttt{keyboard} vor \texttt{sd-vconsole} {\small(wird nur benötigt, falls ein anderes Tastaturmapping als das US-amerikanische verwendet werden soll)} und erst danach \texttt{sd-encrypt} aufgerufen wird. Ansonsten hat man keine Möglichkeit während des Bootvorgangs das Passwort einzugeben.\cite{DmcryptEncryptingEntire}
+
+\begin{lstlisting}[language=bash, caption=mkinitcpio.conf Hooks, label=lst_mkinitcpio]
+	HOOKS=(base systemd autodetect keyboard sd-vconsole modconf block sd-encrypt filesystems fsck)
+\end{lstlisting}
+
+Zusätzlich muss man noch einen weiteren Kernel Parameter übergeben, der dazu dient, die root-Partition beim Bootvorgang zu entschlüsseln und zu mounten. Sollte der systemd-boot Bootloader verwendet werden, kann das durch das Hinzufügen von \texttt{cryptdevice=UUID=<device-UUID>:cryptroot root=/dev/mapper/cryptroot} in die Zeile mit den Optionen in dem entsprechenden Eintrag des Bootloaders erreicht werden.\cite{DmcryptEncryptingEntire} Wird der \texttt{systemd-boot}-Bootloader verwendet, muss dazu die Datei \texttt{/boot/loader/entries/arch\_hardened.conf}\footnote{\texttt{arch\_hardened} entspricht dabei dem Namen des Eintrags. Dieser kann frei gewählt werden, sollte jedoch bei verschiedenen Einträgen klar machen, was der Unterschied ist.} bearbeitet werden. Die Zeile in \autoref{lst_entries} sollte in dieser Datei eingefügt oder falls bereits eine \texttt{options}-Zeile in der Datei existiert entsprechend bearbeitet werden.\cite{DmcryptEncryptingEntire}
+
+\begin{lstlisting}[caption=\texttt{/boot/loader/entries/arch\_hardened.conf} Eintrag, label=lst_entries]
+	options cryptdevice=UUID=12f20578-6fdd-4432-9a98-461cf56a0c1d:cryptroot root=/dev/mapper/cryptroot quiet rw systemd.restore_state=1
+\end{lstlisting}
+
+Die \texttt{UUID} der Partition bekommt man in dem man sich die Einträge des Verzeichnisses \texttt{/dev/disk/by-uuid/} mit dem Befehl \texttt{ls -l /dev/disk/by-uuid/} anzeigen lässt und dann nach dem Eintrag mit der Entsprechenden Partition sucht. In diesem Beispiel kann man sich mit \texttt{ls -l /dev/disk/by-uuid/ | grep sda2 | cut -d \" \ \" \ -f 9} direkt die UUID anzeigen lassen. Wichtig ist noch der \texttt{root} Parameter. Mit diesem wird übergeben, wo sich die \emph{geöffnete} \texttt{root}-Partition befindet. Wie bereits erwähnt muss hier der Pfad in \texttt{mapper} angegeben werden. Damit ist dann die Verschlüsselung vollendet und die Arbeitsbereitschaft des Systems hergestellt.
+
+\paragraphs{Getrennte \ac{LUKS}-Header}Die oben beschriebene Möglichkeit die \texttt{root}-Partition zu verschlüsseln wird auch von den meisten anderen Distributionen während des Installationsprozesses angeboten und automatisch eingerichtet. Eine etwas weiter reichende Möglichkeit kann man bei Arch Linux wählen, indem man den oben beschriebenen Prozess etwas abändert und die \ac{LUKS}-Header auf einem externen Datenspeicher aufbewahrt. Dabei würde es sich empfehlen den selben Datenspeicher wie für die separate \texttt{boot}-Partition zu verwenden. Die Einrichtung einer solchen wird in \autoref{sec:boot} beschrieben. Im Folgenden wird auf die Einrichtung einer mit \ac{LUKS}2 verschlüsselten Partition mit separaten Headern eingegangen.
+
+Eine mit \ac{LUKS} verschlüsselte Festplatte oder Partition hat in etwa den folgenden Aufbau:
+
+\vspace{.25cm}
+
+\begin{minipage}{\textwidth}
+	\centering
+	\fbox{~~LUKS Partitionsheader~~|~~SM 1~~|~~SM 2~~|~~$\dots$~~| SM \textit{n} | \hspace{2cm} Daten \hspace{2cm} }
+\end{minipage}
+
+\vspace{.25cm}
+
+Jede \ac{LUKS}-Partition beginnt mit dem Partitionsheader gefolgt von den verschiedenen \acp{SM}. Danach beginnt dann der Teil mit den verschlüsselten Daten. Der Partitionsheader kann zusammen mit den Schlüsselmaterialien getrennt von der eigentlichen \ac{LUKS}-Partition aufbewahrt werden, damit auf der \ac{LUKS}-Partition keinerlei Metadaten mehr vorhanden sind.\cite[S. 2 f.]{LUKS2OnDiskFormat} Diese Art der Einrichtung entspricht der Funktionsweise eines Zweiten Faktors und der Verschleierung der Art der Verschlüsselung die verwendet wurde.
+
+Vor der eigentlichen Verschlüsselung muss eine Datei für den Header erstellt und bei der Verschlüsselung beziehungsweise zur Öffnung des verschlüsselten Containers muss immer der Header als Parameter übergeben werden. Dazu werden die beiden Befehle in \autoref{lst_luksheader} als \texttt{root}-Nutzer ausgeführt.\cite{DmcryptSpecialtiesArchWiki}
+
+\begin{lstlisting}[caption=Erstellung des \ac{LUKS}-Headers, label=lst_luksheader, language=]
+	dd if=/dev/zero of=header.img bs=16M count=1
+	cryptsetup luksFormat /dev/sda1 --offset 32768 --header header.img
+	cryptsetup open --header header.img /dev/sda1 enc
+\end{lstlisting}
+
+Der Befehl \texttt{dd} erstellt eine leere Datei mit dem Namen \texttt{header.img} und der Größe von 16 Megabyte. Mit dem ersten \texttt{cryptsetup} Befehl wird dann analog zu \autoref{lst_enc} die angegebene Partition verschlüsselt, welche dann später die \texttt{root}-Partition sein wird. Der \texttt{--offset} Parameter erzeugt etwas freien Platz vor der verschlüsselten Partition {\small(32768 Bytes in diesem Fall)} und stellt so sicher, dass später der \ac{LUKS}-Header neu angefügt werden und so eine Partition mit beschädigtem Header \glqq repariert\grqq\ werden kann. Mit dem letzten Befehl kann man den Container dann analog zu \autoref{lst_enc} öffnen.
+
+Danach wird wie bei der normalen Verschlüsselung weiter verfahren und eine externe \texttt{boot}-Partition wie in \autoref{sec:boot} erstellt. Dann wird die \texttt{header.img} Datei mit dem Befehl \texttt{mv header.img /mnt/boot/} auf die externe \texttt{boot}-Partition kopiert {\small(diese sollte zu diesem Zeitpunkt bereits unter \texttt{/mnt/boot/} eingebunden worden sein)}. Zusätzlich zu der Zeile in \autoref{lst_mkinitcpio} muss in der Datei \texttt{/etc/mkinitcpio.conf} noch vor den Hooks die Zeile in \autoref{lst_mkinitcpio2} eingefügt werden.\cite{DmcryptSpecialtiesArchWiki} Dadurch kann im \texttt{initramfs} mit dieser Datei gearbeitet werden.\cite{MkinitcpioArchWiki}
+
+\begin{lstlisting}[caption=Zusätzliche Zeile in der \texttt{mkinitcpio.conf}, label=lst_mkinitcpio2, language=]
+	FILES=(/boot/header.img)
+\end{lstlisting}
+
+Als Nächstes wird noch die Datei \texttt{/etc/crypttab.initramfs}\footnote{Diese Datei entspricht \texttt{/etc/crypttab} während des normalen } erstellt und die folgende Zeile eingefügt. Wobei hierbei darauf geachtet werden muss die tatsächliche ID der zu entschlüsselnden Festplatte zu verwenden {\small(im Gegensatz dazu wurde zuvor die UUID verwendet)}. Diese hat ohne \ac{LUKS} Header keinerlei Metadaten und auch keine Partitionstabelle und kann somit auf keine andere eindeutig identifiziert werden.\cite{DmcryptSpecialtiesArchWiki} Die IDs werden in dem Verzeichnis \texttt{/dev/disk/by-id/} gespeichert. \texttt{ata-SAMSUNG\_[...]\_S1GXNYAF801219} dient hier nur als Beispiel. Auch muss hier der Headerdateipfad angegeben werden.
+
+\begin{lstlisting}[caption=\texttt{crypttab.initramfs}, label=lst_crypttab.initramfs]
+	enc	/dev/disk/by-id/ata-SAMSUNG_[...]_S1GXNYAF801219	none	header=/boot/header.img
+\end{lstlisting}
+
+Jetzt muss nur noch das \texttt{initramfs} neu generiert werden. Das geschieht mit dem Befehl \texttt{mkinitcpio -p linux-hardened}. Auch hier steht \texttt{linux-hadened} für den Namen, der einem Bootloadereintrag gegeben wurde. Nach diesen Änderungen sollte es auch ohne das Definieren von weiteren Kernelparametern, wie es in \autoref{lst_entries} nötig war, möglich sein das Gerät mit dem USB-Stick ganz normal hochzufahren.\cite{DmcryptSpecialtiesArchWiki}
+
+\subsection{\texttt{boot}-Partition}\label{sec:boot}
+Während der Installation wird der verfügbare Speicherplatz partitioniert. Dabei wird im folgenden davon ausgegangen, dass man von einer ursprünglichen Festplatte ausgeht und diese in zwei Partitionen aufgeteilt wird {\small(boot und root)}, wie es auch in \autoref{partitions} zu sehen ist. Auf der boot-Partition werden sich nach dem Installationsvorgang alle wichtigen Dateien für den Bootvorgang befinden. Da diese Partition selbst bei einer Verschlüsselung der root-Partition unverschlüsselt bleiben muss, gibt man so möglichen Angreifern die Möglichkeit Kernelparameter abzuändern oder auf andere Weise auf den Bootvorgang einzuwirken und so eventuell an das Passwort für die root-Partition zu kommen. So kann man zwar mit dem Parameter \texttt{editor=no} verhindern, dass die Kernelparameter während des Bootvorgangs verändert werden können, jedoch kann trotzdem ein anderes System gebootet werden {\small(oder die Festplatte ausgebaut und an ein anderes Gerät angeschlossen werden)} und so die Konfigurationsdatei Bootloaders direkt bearbeitet werden, da diese nicht verschlüsselt ist.\cite{SystemdbootArchWiki}
+
+Eine Möglichkeit diese Schwachstelle zu schließen ist die gesamte \texttt{boot}-Partition auf einem externen Speichermedium, wie einem USB-Stick zu speichern, den man immer mit sich führt. So kann man das System ohne Stick nicht hochfahren. Diese Möglichkeit wird oft zusammen mit einer Systemverschlüsselung verwendet, wie sie in \autoref{sec:enc} beschrieben wurde. Weiter kann dann der \ac{LUKS}-Header ebenfalls auf eben diesem USB-Stick gespeichert werden.\cite{SecurityArchWiki} Auf die erste Möglichkeit wird hier eingegangen und für die zweite wird auf \autoref{sec:enc} verwiesen.
+
+Eine separate \texttt{boot}-Partition ist im Vergleich zu getrennten \ac{LUKS}-Headern relativ einfach zu implementieren. Dazu kann man entweder den kompletten Platz einer USB-Sticks verwenden oder man Partitioniert ihn so, dass er eine Partition für die \texttt{boot}-Partition hat und die zweite kann dann zum normalen Speichern von Daten verwendet werden. Zur Partitionierung kann beispielsweise \texttt{gparted} verwendet werden. Damit wird eine mindestens 200 Megabyte große \texttt{ext4}-Partition erstellt {\small(im Folgenden \texttt{/dev/sdb1})}. Dann wird mit \texttt{mkdir /mnt/boot/} das Verzeichnis erstellt, in welches die \texttt{boot}-Partition später eingebunden werden soll. Danach wird die davor erstellte Partition mit dem Befehl \texttt{mnt /dev/sdb1 /mnt/boot/} eingebunden. Danach kann eine verschlüsselte Festplatte erstellt werden und mit der normalen Installation fortgefahren werden.
+
+\subsection{Auswahl der Pakete}
+Wenn die Partitionierung und Verschlüsselung abgeschlossen und alle Partitionen im Verzeichnis \texttt{/mnt/} eingebunden sind, sollten drei Pakete mit dem Befehl \texttt{pacstrap /mnt base linux-hardened linux-firmware} installiert werden.\cite{InstallationGuideArchWiki} \texttt{base} entspricht dabei einem Paketset, dass einem minimales Arch Linux System entspricht. Ein Linux Kernel wird mit \texttt{linux-hardened} installiert. Dieser Kernel ist weiter abgesichert und enthält zusätzliche Sicherheitspatches als der normale Linux Kernel.\cite{SecurityArchWiki} Als letztes enthält das Paket \texttt{linux-firmware} die Firmware für eine große Anzahl an Hardware. Als nächstes kann mit dem Befehl \texttt{arch-chroot /mnt/} der Wurzelpfad \texttt{/} neu definiert werden.\cite{InstallationGuideArchWiki} In diesem Fall dann als \texttt{/mnt/} Verzeichnis, also genau dort, wo das zu installierende System gerade eingebunden ist. Fortan kann man so arbeiten, als wäre man schon in diesem System.
+
+\paragraphs{Rootless Xorg}An dieser Stelle könnte jetzt eine seitenlange Analyse der Pakete erfolgen, die man noch installieren kann. Dies würde aber den Rahmen sprengen und auch nicht allzu zielführend sein. Es soll nur kurz auf das vielen Desktopumgebungen zugrundeliegende X Fenstersystem\cite{OrgWiki} eingegangen werden. Dieses muss auf viele Hardwarekomponenten des Geräts und Konfigurationsdateien des Systems zugreifen. Dazu war es noch vor Jahren nötig, dass es auch über \texttt{root}-Rechten verfügt. Mit der Einführung des \ac{KMS} konnte das X Fenstersystem auf die Hardware und Treiber über den Kernelspace anstatt des Userpace zugreifen.\cite{Rootless2009} Dadurch wurde auch die Notwendigkeit hinfällig, dass es mit \texttt{root}-Rechten laufen muss. Außerdem birgt die Komplexität seines Codes, dass Fehler ausgenutzt werden können, um uneingeschränkten \texttt{root}-Zugriff zu bekommen.\cite{ChangesXorgWithoutRootRightsFedora} Trotzdem ist das in den meisten Linux Distributionen noch der Fall. Wenn man überprüfen möchte, ob auf dem eigenen System das X Fenstersystem mit \texttt{root}-Rechten läuft, kann man das mit dem Befehl \texttt{ps -o user \$(pgrep Xorg)} tun.
+
+Will man jetzt das Fenstersystem mit den Rechten eines normalen Nutzers laufen lassen, muss bedacht werden, dass viele Displaymanager ein X Fenstersystem ohne \texttt{root}-Rechte unterstützen. Der \ac{GDM} wird im Wiki als Beispiel genannt, bei dem X standardmäßig ohne \texttt{root}-Rechte läuft.\cite{XorgArchWiki} Das ist gleichzeitig auch die einfachste Methode. \ac{GDM} installiert jedoch viele Abhängigkeiten von Gnome. Somit empfiehlt er sich hauptsächlich, wenn auch die Umgebung Gnome genutzt werden will. In Fällen, in denen der Displaymanager nicht standardmäßig ohne \texttt{root}-Rechte läuft, kann auch auf einen Displaymanager verzichtet werden. So kann beim Start des Geräts die \texttt{tty} zum Login genutzt und dann manuell \texttt{startx} ausgeführt werden, was dann das X Fenstersystem mit den Rechten des aktuellen Nutzers laufen lässt. Alternativ kann auch \autoref{lst_xorg} ans Ende der \texttt{/home/<USER>/.bash\_profile} Datei angefügt werden.\cite{ArchWiki}
+
+\begin{lstlisting}[caption=X beim Login starten, label=lst_xorg]
+	if [ "$(tty)" = "/dev/tty1" ]; then
+		startx
+		logout
+	fi
+\end{lstlisting}
+
+\section{Konfiguration nach der Installation}
+\subsection{Zugriffsrechte auf Dateien}\label{sec:permissions}
+Das \ac{PoLP} besagt, dass man einem Benutzer oder einem Programm immer die geringsten Rechte einräumen sollte, mit welchen sie dann immer noch arbeiten können. So sollten nur diejenigen Nutzer in die \texttt{wheel} Gruppe hinzugefügt werden, die auch wirklich Administratorrechte benötigen. Zusätzlich wird von der NSA empfohlen SELinux zu verwenden.\cite[S. 14]{GuideSecureConfiguration2011}
+
+\paragraphs{Zugriffsrechte auf Dateien ändern}In Linux wird Nutzern standardmäßig erlaubt nahezu jede Datei lesen zu können. Das kann kritisch sein, wenn ein Angreifer Zugriff auf einen unprivilegierten Nutzeraccount erlangt hat {\small(\texttt{http} o. ä.)} und als dieser dann Informationen aus den lesbaren Dateien gewinnen kann. So wird empfohlen so viele Dateien wie möglich mit den Lese- und Schreibrechten nur für den Besitzer auszustatten {\small(\texttt{600})}.\cite{SecurityArchWiki} Das kann mit dem Befehl \texttt{chmod 600 <file>} {\small(oder \texttt{700}, wenn die Datei ausführbar sein muss)} erreicht werden.
+
+Eine weitere Möglichkeit wäre die \texttt{umask} zu ändern. Die \texttt{umask} entspricht dabei den Berechtigungen, die bei neu erstellten Dateien bzw. Verzeichnissen gesetzt werden. Den aktuellen \texttt{umask}-Wert kann man sich mit \texttt{umask} oder \texttt{umask -S} anzeigen lassen. Bei dem ersten Befehl nur der absolute Zahlencode angezeigt und beim zweiten dann die tatsächlichen Rechte. Bei einer normalen Installation ist der Wert auf \texttt{022} bzw. \texttt{u=rwx,g=rx,o=rx} gesetzt. Man kann also sehen, dass der Zahlencode eben den Rechten entspricht, die \emph{nicht} gesetzt werden sollen.
+
+Von der NSA wird empfohlen einen \texttt{umask} Wert von \texttt{077}.\cite[S. 49]{GuideSecureConfiguration2011} Dies entspricht den Lese- und Schreibberechtigungen für den Besitzer und keinen Berechtigungen für die Gruppe und alle anderen. Dazu fügt man die Zeile \texttt{umask 077} den Dateien \texttt{/etc/profile}, \texttt{/etc/bashrc} und allen anderen \texttt{rc} Dateien der genutzten Shells oder verändert den Wert, der dort gesetzt ist. Wenn das geschehen ist, kann man die korrekte Funktion testen, indem man eine neue Datei anlegt und mit \texttt{ls -l <file>} die Berechtigungen überprüft. Diese sollten dann so aussehen: \texttt{-rw-------}. Das selbe sollte für die entsprechenden Dateien des root-Nutzers {\small(\texttt{/root/.bashrc} und \texttt{/root/.bash\_profile})} gemacht werden. Weiter sollte in der Datei \texttt{/etc/login.defs} der Wert ebenfalls auf \texttt{077} gesetzt werden.\cite[S. 49]{GuideSecureConfiguration2011} Dieser Wert wird bei der Erstellung der \texttt{/etc/shadow} Datei verwendet, in welcher die gehashten Passwörter in Linux gespeichert sind. Außerdem kann diese \texttt{umask} bei der Anlegung neuer Nutzer Verwendung finden, falls nicht die Variable \texttt{HOME\_MODE} gesetzt ist.
+
+\subsection{Absicherung des \texttt{root}-Nutzers}
+Der Nutzer \texttt{root} ist der Nutzer mit den weitreichendsten Rechten. Es ist wichtig den Zugriff zum root-Nutzer so weit es geht zu beschränken. Dazu empfiehlt es sich die Administratoren die root-Rechte benötigen in die \texttt{wheel} Gruppe {\small(Sudoer)} hinzuzufügen. Dadurch können sie Befehle durch das Voranstellen von \texttt{sudo} Befehle mit root-Rechten ausführen und müssen nicht eine root-Shell mit \texttt{su} eröffnen, in der dann alle Befehle mit root-Rechten ausgeführt werden.\cite{GuideSecureConfiguration2011, SecurityArchWiki}
+
+Vorteile von der Benutzung von \texttt{sudo} anstatt von \texttt{su} sind\cite{SecurityArchWiki}:
+\begin{itemize}
+  \item Privilegierte Befehle, die von unprivilegierten Nutzern ausgeführt werden, können geloggt werden.
+  \item Das Passwort zum root-Nutzer muss nicht weitergegeben werden. Jeder Nutzer hat sein eigenes Passwort und kann dann damit Befehle mit root-Rechten ausführen.
+  \item Es kann nicht passieren, dass man aus Versehen Befehle mit root-Rechten ausführt, wie es der Fall sein könnte, wenn man eine root-Shell eröffnen müsste.
+  \item In der \texttt{/etc/sudoers} Datei kann sehr genau eingestellt werden, welche Nutzergruppe / Nutzer welche Befehle mit root-Rechten ausführen dürfen. So muss nicht der Schlüssel für das Königreich herausgegeben werden.
+\end{itemize}
+
+\paragraphs{Vorbereitungen}Das Logging der Ausführung von sudo-Befehlen ist nicht standardmäßig aktiviert. Um es zu aktivieren muss man die \texttt{/etc/sudoers} Datei bearbeiten. Da es hierbei leicht passieren kann, dass man durch Schreibfehler den sudo-Zugriff sperren kann, empfiehlt es sich die Datei nicht mit einem normalen Editor zu bearbeiten, sondern mit dem eigen dafür gedachten Befehl \texttt{visudo}. Dadurch wird die Datei nach der Bearbeitung auf Syntaxfehler überprüft.\cite[S. 39]{GuideSecureConfiguration2011} Hat man die Datei geöffnet fügt man die in \autoref{lst_visudo} zu sehenden Zeilen hinzu {\small(oder man entfernt die Raute vor diesen Zeilen, falls sie nur auskommentiert sind)}.\cite{SudoLogging2019,SudoersManual}
+
+\begin{lstlisting}[caption=/etc/sudoers, label=lst_visudo]
+	Defaults    log_output
+	Defaults!   /sbin/reboot !log_output
+	Defaults!   /usr/bin/sudoreplay !log_output
+\end{lstlisting}
+
+Danach kann man überprüfen, ob die Einstellungen wie gewollt funktionieren. Dazu führt man einen Befehl mit \texttt{sudo} aus {\small(bspw. \texttt{sudo ls})}. Danach kann man den Befehl \texttt{sudo sudoreplay -l} ausführen, um sich die Aufzeichnungen der mit \texttt{sudo} ausgeführten Befehle anzeigen zu lassen. Wenn alles korrekt funktioniert sollte die Ausgabe wie in \ref{lst_sudoreplay}
+
+\begin{lstlisting}[caption=sudoreplay Ausgabe, label=lst_sudoreplay]
+	Jun 11 16:34:23 2020 : hannes : TTY=/dev/pts/1 ; CWD=/home/hannes ; USER=root ; HOST=manjaroPC ; TSID=000001 ; COMMAND=/usr/bin/ls
+\end{lstlisting}
+
+Bevor im Folgenden der Zugriff auf den root-Nutzer eingeschränkt wird, sollte sichergestellt werden, dass mindestens ein Nutzer in der Gruppe \texttt{wheel} ist, damit trotzdem noch privilegierte Befehle ausgeführt werden können. Das kann man mit dem Befehl \texttt{grep \^wheel /etc/group} überprüfen.\cite[S. 37]{GuideSecureConfiguration2011} Es sollte eine Zeile ausgegeben werden, an deren Anfang \texttt{wheel} steht und am Ende die Nutzer in der Gruppe aufgezählt werden. In etwa sollte die Ausgabe dann diese Form haben: \texttt{wheel:x:998:hannes}. Falls kein Nutzer in der Gruppe ist, kann ein bereits existierender Nutzer mit dem Befehl \texttt{usermod -aG wheel <name>} hinzugefügt werden. Sollte die Gruppe gar nicht existieren, muss sie davor noch mit dem Befehl \texttt{groupadd wheel} erzeugt werden. Bei den beiden letzten Befehlen ist zu beachten, dass sie nur vom root-Nutzer ausgeführt werden können, solange noch kein Nutzer sudo-Rechte besitzt. Nach dem Ausführen der Befehle sollte überprüft werden, ob die \texttt{wheel} Gruppe jetzt existiert und sich Nutzer darin befinden.
+
+\paragraphs{Zugriff einschränken}Wenn man mindestens einen Nutzer in die \texttt{wheel} Gruppe hinzugefügt hat, kann der Zugriff auf den tatsächlichen root-Nutzer sukzessiv eingeschränkt werden. In \autoref{lst_sudoers} sieht man einen Eintrag aus der \emph{user specification} in der Datei \texttt{/etc/sudoers}. Der erste Teil gibt an, für welche Nutzer / Gruppen die nachfolgenden Regeln gelten sollen {\small(\texttt{root})}. Das erste \texttt{ALL} steht für die Quellen von denen der Nutzer / die Gruppe die Befehle ausführen darf. Das \texttt{(ALL)} steht für die Nutzer, als welche der Nutzer / die Gruppe die Befehle ausführen darf. Mit \texttt{sudo -u apache <command>} könnte beispielsweise ein Befehl mit privilegierten Rechten als der Nutzer \texttt{apache} ausgeführt werden. Um der \texttt{wheel} Gruppe die selben Rechte zu geben, kann in die Datei die Zeile wie in \autoref{lst_sudoers_wheel} zu sehen eingefügt werden.\cite{SudoersManual} Jetzt sollte \emph{unbedingt} überprüft werden, ob die Einstellungen funktionieren. Dazu testet man am besten den Zugriff auf die \texttt{sudoers} Datei, damit man sie zumindest noch bearbeiten kann, falls etwas schief läuft. Dazu führt man als Nutzer in der \texttt{wheel} Gruppe den Befehl \texttt{sudo visudo} aus und gibt sein eigenes Passwort {\small(nicht das des root-Nutzers)} an. Erst, wenn der Nutzer in der \texttt{wheel} Gruppe auch wirklich root-Berechtigungen hat, kann die Zeile aus \autoref{lst_sudoers} mit einer Raute auskommentiert werden.
+
+\begin{lstlisting}[caption=Berechtigungen in der \texttt{/etc/sudoers} Konfiguration, label=lst_sudoers]
+	root            ALL = (ALL) ALL
+\end{lstlisting}
+
+\begin{lstlisting}[caption=Berechtigungen der \texttt{wheel} Gruppe, label=lst_sudoers_wheel]
+	%wheel          ALL = (ALL) ALL
+\end{lstlisting}
+
+Wenn zu einem Gerät mehrere Administratoren Zugriff haben, können hier noch viel detailliertere Einstellungen vorgenommen werden\cite{SudoersManual}, deren Beschreibung würde hier aber zu weit führen.
+
+\paragraphs{\texttt{PATH} Variable}In der \texttt{PATH} Variable werden die Verzeichnisse gespeichert, in welchen global ausführbare Dateien liegen. Es sollte verhindert werden, dass sich in diesen Verzeichnissen keine beliebigen oder unsicheren Programme befinden. Auch sollten keine relativen Pfade in der \texttt{PATH}-Variable verwendet werden, da der \texttt{root}-Nutzer auch in unsicheren Verzeichnissen Befehle ausführen muss und sich darin nicht überprüfte Programme befinden könnten.\cite[S. 47]{GuideSecureConfiguration2011}
+
+Um zu überprüfen, ob in der aktuellen \texttt{PATH}-Variable einer der beiden beschriebenen Fälle vorliegt, lässt man sich die \texttt{PATH}-Variable mit \lstinline|echo $PATH| anzeigen. Der Output enthält dann alle Verzeichnisse, in welchen nach global ausführbaren Dateien gesucht wird, durch ein Doppelpunkt getrennt. Eine exemplarische Ausgabe ist in \autoref{lst_path} zu sehen. In dieser Ausgabe überprüft man jetzt, ob wirklich jeder Eintrag mit einem \texttt{/} beginnt und somit keine relative Pfadangabe enthalten ist.\cite[S. 48]{GuideSecureConfiguration2011} Bei relativen Pfaden kann es sonst sein, dass der ausführende {\small(privilegierte)} Nutzer mit einem Befehl ein anderes Programm ausführt als erwartet, dass sich in einem zu ihm derart relativen Verzeichnis befindet, wie es in der \texttt{PATH}-Variable angegeben ist. Als Beispiele könnte man hier die beiden Verzeichnisse \texttt{.} {\small(das aktuelle Verzeichnis)} oder \texttt{..} {\small(das aktuelle Überverzeichnis)} nennen. Auch sollten keine leere Einträge {\small(also keine zwei Doppelpunkte direkt hintereinander wie hier: \texttt{::}} in der Variable sein, da diese wie ein \texttt{.} gelten und somit auch auf das aktuelle Verzeichnis zeigen, in dem gerade ein Befehl ausgeführt wird.
+
+\begin{lstlisting}[caption=Exemplarische Ausgabe der \texttt{PATH}-Variable, label=lst_path, language=]
+	/home/hannes/perl5/bin:/home/hannes/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/var/lib/snapd/snap/bin
+\end{lstlisting}
+
+Auch sollte darauf geachtet werden, dass in der \texttt{PATH}-Variable keien Verzeichnisse zu welcher Gruppen oder andere Nutzer als der Besitzer Schreibrechte besitzt.\cite[S. 48]{GuideSecureConfiguration2011} Dies könnte bewirken, dass ein nicht privilegierter Nutzer in eben diese Verzeichnisse schreibt oder sogar dort befindliche Dateien überschreibt und so einen privilegierten Nutzer dazu bringen kann ohne sein Wissen Schadcode auszuführen.
+
+\subsection{Sichere Authentisierung}
+In \ac{UNIX} Systemen wird die Authentisierung mit dem \ac{PAM} umgesetzt. Dadurch müssen neue Authentisierungsmethoden {\small(Hardware Schlüssel, biometrische Schlüssel, etc.)} nicht direkt in Programmen implementiert werden. Die Programme werden lediglich mit Modulen verknüpft. Diese Module sind die \ac{PAM}. Änderungen müssen so nur noch zentral in diesen implementiert werden und können von allen anderen Programmen genutzt werden.\cites{LinuxPAM}[S. 43]{GuideSecureConfiguration2011} Die Konfiguration der \ac{PAM} kann entweder über die Datei \texttt{/etc/pam.conf} oder das Verzeichnis \texttt{/etc/pam.d/} geschehen. Wenn zweiteres vorhanden ist, wird ersteres ignoriert.\cite{ChapterLinuxPAMConfiguration}
+
+Ein wichtiger Bestandteil der sicheren Authentisierung ist die Verwendung sicherer Hashalgorithmen. Seit der \texttt{passwd} Version 4.1.4.3-3 wird unter Arch Linux standardmäßig der \texttt{SHA512} Algorithmus verwendet.\cite{UseSha512Hash2009,SHAPasswordHashes} Dies kann in den Dateien \texttt{/etc/pam.d/system-auth} und \texttt{/etc/login.defs}nachgeprüft werden.\cite[S. 46]{GuideSecureConfiguration2011} In der Datei \texttt{/etc/pam.d/system-auth} sollte eine der in \ref{lst_system-auth} entsprechende Zeile stehen. Wichtig ist dabei, dass kein anderer Hashalgorithmus statt \texttt{SHA512} darin steht.\cite[S. 46]{GuideSecureConfiguration2011} In dieser Datei werden die Standardeinstellungen für den Systemweiten Authentisierungsprozess gespeichert, die von einigen anderen \ac{PAM} Modulen aufgegriffen werden. Somit sind Veränderungen in dieser Datei eine gute Möglichkeit um weitreichende Auswirkungen zu bewirken.\cite[S. 43]{GuideSecureConfiguration2011}
+
+\begin{lstlisting}[caption=\texttt{/etc/pam.d/system-auth} Konfiguration, label=lst_system-auth]
+	password  required  pam_unix.so     try_first_pass nullok sha512 shadow rounds=65536
+\end{lstlisting}
+
+Der Parameter \texttt{rounds=65536} verbessert zusätzlich die Passwortsicherheit, indem das eingerichtete Passwort genau diesem Wert entsprechend oft gehasht wird {\small(in diesem Fall also 65536 mal)}. Das vervielfacht entsprechend oft die Zeit, die ein Angreifer für einen Bruteforce Angriff aufbringen muss, weil für jedes potentielle Passwort 65536 mal der Hash berechnet werden muss. Zwar muss auch beispielsweise bei Logins das Passwort entsprechend oft gehasht werden, was, wenn man das korrekte Passwort kennt jedoch vernachlässigbar kurz ist.\cite{SHAPasswordHashes}
+
+In der Datei \texttt{/etc/login.defs} wird unter anderem der Hashalgorithmus definiert, der zur Passwortspeicherung verwendet wird. Deshalb sollte auch hier überprüft werden, ob der richtige Algorithmus verwendet wird. Dazu sollte die zweite Zeile in \autoref{lst_login.defs} der Datei hinzugefügt werden, falls sie nicht schon standardmäßig darin ist.\cite[S. 46 f.]{GuideSecureConfiguration2011}
+
+\begin{lstlisting}[caption=\texttt{/etc/login.defs} Hashalgorithmus, label=lst_login.defs]
+	ENCRYPT_METHOD  SHA512
+\end{lstlisting}
+
+\section{Installation von weiteren Programmen}
+Zusätzlich zu der bisher beschriebenen Konfiguration des Systems kann man noch zusätzliche Software zur weiteren Absicherung des Systems installieren. Im Folgenden soll auf zwei Programmen zum Schutz vor Schadsoftware eingegangen werden. Außerdem wird daraufhin noch eine kleine Auswahl dargestellt, deren Einrichtung nicht detailliert beschrieben wird.
+
+\paragraphs{ClamAV}Hierbei handelt es sich um eine Open Source Antivirus Alternative von Cisco. In den letzten Jahren gab es einen beträchtlichen Anstieg an gegen Linux Systeme gerichtete Malware.\cite{LinuxMalwareRise2017} Deshalb sollte man sich als Linux Nutzer mit geeignetem Schutz beschäftigen. ClamAV ist einfach zu installieren und zu konfigurieren und verfügt bei Bedarf über eine grafische Oberfläche.
+
+Zuerst muss das Paket \texttt{clamav} installiert werden. Danach sollte einmalig manuell die Datenbank aktualisiert werden. Dazu führt man den Befehl \texttt{freshclam} mit \texttt{root}-Rechten aus. Danach kann mit den beiden Befehlen in \autoref{lst_freshclam} kann eine automatische Aktualisierung der Datenbank eingerichtet werden.\cite{ClamAVArchWiki}
+
+\begin{lstlisting}[caption=Automatische Aktualisierung der ClamAV Datenbank, label=lst_freshclam, language=]
+	sudo systemctl start clamav-freshclam.service
+	sudo systemctl enable clamav-freshclam.service
+\end{lstlisting}
+
+ClamAV unterstützt die Verwendung von externen Signaturdatenbanken. \texttt{Fangfrisch} ist eine von ihnen. Um diese Datenbank zu verwenden wird das Paket \texttt{python-fangfrisch} aus dem \ac{AUR} installiert. Danach kann das Paket mit der Datei \texttt{/etc/fangfrisch/fangfrisch.conf} konfiguriert werden, sodass noch weitere Datenbanken geladen werden können, als die dort angegebenen.\cite{Fangfrisch2020} Um \texttt{fangfrisch} mit ClamAV zu verbinden führt man den folgenden privilegierten Befehl aus. Um eine regelmäßige Aktualisierung der Datenbanken zu gewährleisten führt man noch den Befehl in der zweiten Zeile von \autoref{lst_fangfrisch} aus.
+
+\begin{lstlisting}[caption=Verbindung von \texttt{fangfrisch} und ClamAV, label=lst_fangfrisch, language=]
+	sudo -u clamav /usr/bin/fangfrisch --conf /etc/fangfrisch/fangfrisch.conf initdb
+	sudo systemctl enable fangfrisch.timer
+\end{lstlisting}
+
+Jetzt kann begonnen werden das System nach Viren zu untersuchen. Um das komplette System zu scannen kann der Befehl \texttt{clamscan --recursive --infected /}. Damit werden alle als Virus erkannten Dateien {\small(\texttt{--infected})} rekursiv vom \texttt{root}-Verzeichnis aus {\small(\texttt{--recursive})} ausgegeben. Der Scan kann analog mit einzelnen Dateien duchgeführt werden {\small(\texttt{clamscan <file>})}. Dabei können infizierte Dateien mit dem Parameter \texttt{--remove} gelöscht und mit \texttt{--move=/dir/to/quarantine} in ein bestimmtes Verzeichnis verschoben werden. 
+
+Mit ClamAV können On-Access Scans mit der folgenden Konfiguration durchgeführt werden. Zuerst sollte mit den Befehlen in \autoref{lst_clamd} der ClamAV Daemon gestartet werden.\cite{ClamAVArchWiki}
+
+\begin{lstlisting}[caption=Starten des ClamAV Daemons, label=lst_clamd, language=]
+	sudo systemctl start clamav-daemon.service
+	sudo systemctl enable clamav-daemon.service
+\end{lstlisting}
+
+Weiter müssen Änderungen in der \texttt{/etc/clamav/clamd.conf} ab der Zeile 623 vorgenommen werden. Ein Beispiel ist in \autoref{app:clamd.conf} beigefügt. Dabei sind die drei wichtigsten Einstellungen \texttt{OnAccessMountPath /}, hier wird angegeben, welches Verzeichnis rekursiv überwacht werden soll {\small(in diesem Fall das komplette Dateisystem)}, \texttt{OnAccessExcludeRootUID yes}, mit welcher verhindert wird, dass Prozesse des \texttt{root}-Nutzers Alarm schlagen können, und \texttt{OnAccessExcludeUname clamav}, womit verhindert wird, dass Prozesse des dort angegebenen Nutzers einen Alarm auslösen können. In diesem Fall wird der Nutzer \texttt{clamav} ausgeschlossen.\cite{ClamAVArchWiki,OnAccessScanningClamAV}
+
+Für weiterführende Konfigurationen {\small(unter anderem Einstellungen zur heuristischen Analyse)} wird auf die Dokumentation von ClamAV\footnote{\url{https://www.clamav.net/documents/clam-antivirus-user-manual}} und das Arch Wiki\footnote{\url{https://wiki.archlinux.org/index.php/ClamAV}} verwiesen.
+
+\paragraphs{rkhunter}Ein Programm, mit dem das System auf Rootkits\footnote{Dabei handelt es sich um Werkzeuge, die installiert werden, um künftige Zugriffe, Prozesse und Dateien des Angreifers zu verbergen.\cite{Rootkit2020}} und anderer Schadsoftware abgesucht werden kann. Zuerst muss das Paket \texttt{rkhunter} installiert werden. Danach kann das Programm verwendet werden. In der \texttt{/etc/rkhunter.conf} Datei sollte die folgende Zeile auskommentiert werden, um alle Tests zu aktivieren.
+
+\begin{lstlisting}[caption=\texttt{/etc/rkhunter.conf} Einstellungen, label=lst_rkhunter.conf,language=]
+	DISABLE_TESTS=suspscan hidden_ports hidden_procs deleted_files packet_cap_apps apps
+\end{lstlisting}
+
+Danach können die Befehle in \autoref{lst_rkhunter} als privilegierter Nutzer ausgeführt werden. Mit dem ersten wird die Datenbank der Dateieigenschaften aktualisiert. Damit wird sichergestellt, dass die später durchgeführten Checks ausschließlich bei ungewollten Veränderungen der Dateien anschlagen. Es wird der Ist-Zustand festgehalten, um Abweichungen anzuzeigen. Dieser Befehl muss einmalig ausgeführt werden. In der nächsten Zeile wird die eigentliche Überprüfung durchgeführt. Dabei wird eine Reihe an Tests ausgeführt. Das Ergebnis kann anschließend in der Datei \texttt{/var/log/rkhunter.log} abgerufen werden. Dort wird unter anderem aufgeführt, warum Warnungen ausgegeben wurden. Es kann dabei auch zu False Positives kommen. Deshalb sollte überprüft werden, was es mit den Warnungen auf sich hat und nur bei einer wirklichen Bedrohung muss gehandelt werden. Mit dem letzten Befehl überprüft \texttt{rkhunter} seine eigene Konfigurationsdateien auf Fehler.\cite{RootkitHunterREADME}
+
+\begin{lstlisting}[caption=Ausführen von \texttt{rkhunter},label=lst_rkhunter,language=]
+	rkhunter --propupd
+	rkhunter --check
+	rkhunter --config-check
+\end{lstlisting}
+
+Im Gegensatz zu ClamAV kann \texttt{rkhunter} nur manuell gestartet werden und nicht periodisch {\small(außer mit \texttt{cron})}, außerdem arbeitet er nicht mit Heuristiken wie ClamAV.
+
+\paragraphs{Weitere Programme}In \autoref{tab:software} ist eine Auswahl an Programmen aufgelistet, die noch zusätzlich installiert und konfiguriert werden können, um die Sicherheit des Systems zu erhöhen.
+
+\begin{longtable}{p{.2\textwidth}|p{.7\textwidth}}
+	\toprule
+	{\large\textsc{Programm}} & {\large\textsc{Kurzbeschreibung}} \\
+	\midrule[1pt]
+	\texttt{tiger}\cite{TigerUNIXSecurity} & Ein Sicherheitsaudit und Intrusion Detection Programm \\
+	\midrule
+	\texttt{openvas}\cite{OpenVASOpenVulnerability} & Ein funktionsstarker Schwachstellenscanner \\
+	\midrule
+	\texttt{ufw}\cite{UfwHomepage} & Ermöglicht die Konfiguration von \texttt{iptables} über die Kommandozeile. Dazu kann noch eine grafische Oberfläche \texttt{gufw} installiert werden. \\
+	\midrule
+	\texttt{KeePassXC}\cite{KeePassXCPasswordManager} & Ein Passwortmanager, der in die meisten Browser integriert werden kann. \\
+	\midrule
+	\texttt{GnuPG}\cite{GNUPrivacyGuard2020} & Offene Implementierung des OpenPGP Standards, mit dem Dateien und Kommunikation verschlüsselt und signiert werden können. \\
+	\bottomrule
+	\caption{Auflistung zusätzlicher Pakete}
+	\label{tab:software}
+\end{longtable}

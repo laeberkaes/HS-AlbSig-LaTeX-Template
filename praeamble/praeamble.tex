@@ -1,0 +1,170 @@
+%!TEX root=../HA.tex
+\documentclass[a4paper, 11pt]{article}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%ALLGEMEIN%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\usepackage{polyglossia} % deutsches Sprachpaket
+%\setdefaultlanguage{german}
+\usepackage[ngerman]{babel}
+\usepackage{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{csquotes}
+\usepackage{fullpage}
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.75cm, right=2.75cm]{geometry} % gibt die Seitenränder an
+
+%%%%%Microtype Verbesserungen%%%%%%
+\usepackage[activate={true,nocompatibility},final,tracking=true,kerning=true,spacing=true,factor=1100,stretch=10,shrink=10]{microtype} % microtype Verbesserungen
+
+\SetExtraKerning[unit=space]
+    {encoding={*}, family={bch}, series={*}, size={footnotesize,small,normalsize}}
+    {\textendash={400,400}, % en-dash, add more space around it
+     "28={ ,150}, % left bracket, add space from right
+     "29={150, }, % right bracket, add space from left
+     \textquotedblleft={ ,150}, % left quotation mark, space from right
+     \textquotedblright={150, }} % right quotation mark, space from left
+\SetExtraKerning[unit=space]
+  {encoding={*}, family={qhv}, series={b}, size={large,Large}}
+	{1={-200,-200}, \textendash={400,400}}
+\SetTracking{encoding={*}, shape=sc}{40}
+
+\usepackage{graphicx} %Abbildungen einfügen
+\usepackage[printonlyused]{acronym} %Abkürzungsverzeichnis
+%\usepackage{acro}
+\usepackage[hyphens]{url}		% Für Zeilenumbruch bei URLS
+%\setcounter{biburllcpenalty}{7000} %Erlaubt Zeilenumbrüche bei ULRs bei Biblatex
+%\Urlmuskip=0mu plus 1mu
+
+\usepackage{chngcntr}		%Ändert Bildnummerierung von durchgehende Nummerierung
+\counterwithin{figure}{section}		%Kapitel.Bildnummer
+\counterwithin{table}{section}		%Kapitel.Tabellennummer
+
+\usepackage{verbatim}
+\usepackage{enumitem} %damit man Aufzählungen auch ohne Aufzählungszeichen verwenden kann
+\usepackage[colorlinks=false,pdfborder={0 0 0},bookmarksnumbered]{hyperref} %für Hyperlinks und Querverweise
+\usepackage{ftnxtra} %Für Zitate in Captions
+\interfootnotelinepenalty=10000 %footnotes werden nicht gebrochen
+
+% Fußnoten
+\usepackage[hang]{footmisc}
+\setlength{\skip\footins}{.75cm}
+\setlength{\footnotesep}{0.4cm}
+
+% Hurenkinder und Schusterjungen verhindern
+\clubpenalty10000
+\widowpenalty10000
+\displaywidowpenalty=10000
+
+%Verschiedene Fonts
+%\usepackage{charter} %Ohne Mathfont
+%\usepackage[bitstream-charter]{mathdesign} % mit Mathfont
+\usepackage{kpfonts}%  for math
+%\usepackage{fourier}
+%\usepackage{libertine}%  serif and sans serif
+%\usepackage{palatino}
+%\usepackage[scaled=.8]{beramono}%% mono
+\usepackage[scaled=.95]{nimbusmono}
+%\usepackage[adobe-utopia]{mathdesign}
+%\usepackage[scaled=.95]{helvet}
+%\usepackage{trajan}
+
+%Header und Footer
+\usepackage[headsepline,nouppercase]{scrlayer-scrpage}
+\pagestyle{plain}
+\automark{section}
+\setlength{\headsep}{0.5cm}
+
+%Tausenderstellen Trennen mit einem Leerzeichen
+\usepackage{numprint}
+
+%Tabellen mit verschiedener breite
+%\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\setlength{\heavyrulewidth}{1.5pt}
+\usepackage{makecell}
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\renewcommand{\arraystretch}{1.5}
+
+%PDF Dateien als ganze Seiten einfügen
+\usepackage{pdfpages}
+
+%URL mit Sonderzeichern (\verb|text|) in Fußnoten
+% \urldef{\urlA}\url{https://apps.fcc.gov/oetcf/eas/reports/ViewExhibitReport.cfm?mode=Exhibits&RequestTimeout=500&calledFromFrame=N&application_id=SzCBk%2Brpg3ieoz2CJAFlbQ%3D%3D&fcc_id=NDD9530401309}
+
+%Bilder in float
+\usepackage{float}
+
+%Rahmen für Bilder
+\fboxrule=.75pt
+
+% Platz zwischen Überschrift und Text
+\usepackage[sf,explicit,bf]{titlesec}
+\titlespacing\section{0pt}{12pt plus 4pt minus 2pt}{4pt plus 2pt minus 2pt}
+\titlespacing\subsection{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+\titlespacing\paragraph{0pt}{4pt plus 4pt minus 2pt}{12pt plus 4pt minus 4pt}
+
+% Umlauf für Bilder
+%\usepackage{wrapfig}
+
+% Punkte zwischen Abschnitten und Seitenzahlen
+%\usepackage{tocloft}
+%\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+%\renewcommand{\cftsubsecleader}{}
+
+% Makros
+\newcommand{\paragraphs}[1]{\paragraph*{#1}{\hspace{-1em}}~~--~~}
+\newcommand{\subparagraphit}[1]{\subparagraph{\textit{#1\hspace{1em}--}}}
+\newcommand{\itembf}[1]{\item{\textbf{#1}}}
+
+% Keine bold Subparagraphen
+%\makeatletter
+%\renewcommand\subparagraph{\@startsection{subparagraph}{4}{\z@}%
+%	{3.25ex \@plus1ex \@minus.2ex}%
+%	{-1em}%
+%	{\sffamily}}
+%\makeatother
+
+% Farbe für inline Listing
+\definecolor{light-gray}{gray}{0.95}
+%\newcommand{\code}[1]{\colorbox{light-gray}{\lstinline{#1}}}
+% \newcommand{\code}[1]{\texttt{#1}}
+
+%Für Grafiken
+\usepackage{tikz}
+\usetikzlibrary{shapes.multipart,arrows}
+\tikzstyle{partition} = [rectangle, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=blue!30]
+\tikzstyle{line} = [thick, -, >=stealth]
+\tikzstyle{arrow} = [thick, ->, >=stealth]
+
+%Worttrennungen
+%\input{./hyphenation/hyphenation}
+
+%Spacing
+\usepackage{setspace}
+
+% Captions sind kleiner geschrieben und in Kapitälchen
+\usepackage[font=small,labelfont=sc]{caption}
+\usepackage[font=small]{subcaption}
+
+% Acro lange Form in italic
+\renewcommand*{\acffont}[1]{\textit{#1}}
+\renewcommand*{\acfsfont}[1]{\textnormal{\small#1}}
+
+% Zitate
+%\usepackage{epigraph}
+\usepackage[font=itshape]{quoting}
+
+% ToDos
+\usepackage[obeyFinal,
+            textsize    = footnotesize,
+            figwidth    = 0.99\linewidth,
+            ngerman,
+            colorinlistoftodos,
+            ]{todonotes}
+
+\usepackage{kantlipsum}
