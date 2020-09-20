@@ -1,11 +1,19 @@
 % !TEX root = ../vorlage.tex
+% !TeX spellcheck = de_DE
+%!TEX root=../vorlage.tex
+\section{Kapitel}\label{sec:kapitel}
+Wen labels vergeben wurden, kann darauf auch referenziert werden. Code sieht man beispielsweise in \autoref{lst:code} und eine Abbildung in \autoref{fig:figref}
 
-\section{Hinführung}
-\kant[1-2] \todo[line]{Hier muss noch was ergänzt werden.}
-\kant[3]
-\missingfigure{Hier fehlt noch ein Bild}
-\kant[4-5]
-\subsection{Unterkapitel}
-\kant[6]
-\paragraph{Überschrift für Absätze (sind nicht im Inhaltsverzeichnis)}
-\kant[7]
+\subsection{Tabelle}
+\begin{longtable}{p{.2\textwidth}|p{.7\textwidth}}
+	\toprule
+	{\large\textsc{Linke Spalte}} & {\large\textsc{Rechte Spalte}} \\
+	\midrule[1pt]
+	\texttt{Beispiel\autocite{example}} & Das ist die \ac{Abk.} von einem \ac{Bsp.}. Wiederholte Einträge währen kurz. (\ac{Abk.} oder \ac{Bsp.}) \\
+	\bottomrule
+	\caption{Auflistung zusätzlicher Pakete}
+	\label{tab:software}
+\end{longtable}
+
+\subsubsection{Unterunterüberschrift}\label{subsubsec:label}
+Unterüberschriften sollten nur, wenn unbedingt nötig benutzt werden.

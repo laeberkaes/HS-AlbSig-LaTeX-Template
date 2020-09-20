@@ -1,3 +1,45 @@
 \appendix
 \addcontentsline{toc}{part}{Appendix}
 \part*{\textsf{Appendix}}
+% Hier wird dann mit A, B, ... nummeriert.
+\section{Codebeispiele}
+Hier kommen dann Codestücke rein, die für den Fließtext zu lang oder nicht relevant genug waren.
+
+\begin{lstlisting}[language=c,label=lst:code]
+	#include <stdio.h>
+	
+	const double mwst_satz = 0.19;
+	const double artikel_1 = 7.20;
+	const double artikel_2 = 1.40;
+	const double artikel_3 = 5.60;
+	double preis;
+	
+	void add_mwst(void) {
+		printf("\n+\t%f EUR\n", preis * (mwst_satz+1));
+	}
+	
+	int main(void) {
+		preis = artikel_1;
+		add_mwst();
+		preis = artikel_2;
+		add_mwst();
+		preis = artikel_3;
+		add_mwst();
+		printf("----------\n");
+		preis = artikel_1 + artikel_2 + artikel_3;
+		add_mwst();
+		printf("==========\n");
+		getchar();
+		return 0;
+	}
+\end{lstlisting}
+
+\section{Bilder}
+Hier kommen Bilder rein, die zu viel für den Fließtext waren.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=.4\textwidth]{Logo2.png}
+	\caption{Das ist die Bildunterschrift}
+	\label{fig:figref}
+\end{figure}
