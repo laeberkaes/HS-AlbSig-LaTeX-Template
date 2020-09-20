@@ -1,53 +1,8 @@
 \usepackage[hang, flushmargin]{footmisc}
-\setlength{\footnotesep}{.45cm}
+\setlength{\footnotesep}{.3cm}
 \setlength{\skip\footins}{.8cm}
 %\setlength{\footnotemargin}{12pt}
 \usepackage{setspace} %verringert den Zeilenabstand -- kann noch mit \spacing{1.8} angepasst werden
 %\setlength{\footnotemargin}{1.2em}
 
-\setlength{\footnotemargin}{-0.5em}
-
-\makeatletter
-\ifFN@para
-\else
-\long\def\@makefntext#1{%
-	\ifFN@hangfoot
-	\bgroup
-	\setbox\@tempboxa\hbox{%
-		\ifdim\footnotemargin>0pt
-		\hb@xt@\footnotemargin{\@makefnmark\hss}%
-		\else
-		\@makefnmark\hskip-\footnotemargin      %%Changed here
-		\fi
-	}%
-	\leftmargin\wd\@tempboxa
-	\rightmargin\z@
-	\linewidth \columnwidth
-	\advance \linewidth -\leftmargin
-	\parshape \@ne \leftmargin \linewidth
-	\footnotesize
-	\@setpar{{\@@par}}%
-	\leavevmode
-	\llap{\box\@tempboxa}%
-	\parskip\hangfootparskip\relax
-	\parindent\hangfootparindent\relax
-	\else
-	\parindent1em
-	\noindent
-	\ifdim\footnotemargin>\z@
-	\hb@xt@ \footnotemargin{\hss\@makefnmark}%
-	\else
-	\ifdim\footnotemargin=\z@
-	\llap{\@makefnmark}%
-	\else
-	\llap{\hb@xt@ -\footnotemargin{\@makefnmark\hss}}%
-	\fi
-	\fi
-	\fi
-	\footnotelayout#1%
-	\ifFN@hangfoot
-	\par\egroup
-	\fi
-}
-\fi
-\makeatother
+\renewcommand{\footnotesize}{\scriptsize}
