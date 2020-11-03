@@ -10,4 +10,4 @@ The main file is `vorlage.tex`. In this file all other files are included. So if
 
 ---
 
-This repository will be continued on [gitea](https://gitea.uraltemorla.xyz/laeberkaes/HS-AlbSig-LaTeX-Template). There will be a Beamer Template as well.
+**This repository will be continued on [gitea](https://gitea.uraltemorla.xyz/laeberkaes/HS-AlbSig-LaTeX-Template). There will be a Beamer Template as well.**
