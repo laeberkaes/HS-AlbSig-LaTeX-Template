@@ -1,7 +1,5 @@
 # HS-AlbSig-LaTeX-Template
 
----
-
 **This repository will be continued on [gitea](https://gitea.uraltemorla.xyz/laeberkaes/HS-AlbSig-LaTeX-Template). There will be a Beamer Template as well.**
 
 ---
