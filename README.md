@@ -1,7 +1,11 @@
 # HS-AlbSig-LaTeX-Template
+
 ---
+
 **This repository will be continued on [gitea](https://gitea.uraltemorla.xyz/laeberkaes/HS-AlbSig-LaTeX-Template). There will be a Beamer Template as well.**
+
 ---
+
 This is a template for any scientific work done at the **HS AlbSig**.
 
 Have a look at the [PDF](https://raw.githubusercontent.com/laeberkaes/HS-AlbSig-LaTeX-Template/master/vorlage.pdf).
